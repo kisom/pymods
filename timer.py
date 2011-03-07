@@ -66,7 +66,7 @@ Example usage:
             return False
 
     def __str__(self):
-        return str(self.elapsed)
+        return str(self.elapsed())
 
     def elapsed(self):
         if self.__running:
