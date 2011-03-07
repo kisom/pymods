@@ -5,7 +5,7 @@
 
 import datetime
 
-class Timer():
+class Timer:
     """
 This is a simple Timer class for basic profiling. It features basic 
 start(), stop(), reset(), and elapsed() methods.
@@ -31,9 +31,7 @@ Example usage:
     __running               = None
 
     def __init__(self):
-        __start             = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
-        __end               = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
-        __running           = False
+        self.reset()
 
     def start(self):
         """
@@ -65,10 +63,21 @@ Example usage:
         else:
             return False
 
+    def reset(self):
+        """
+        Method to clear Timer and ensures Timer is in a non-running state.
+        """
+        self.__start        = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
+        self.__end          = datetime.datetime(1, 1, 1, 0, 0, 0, 0)
+        self.__running      = False
+
     def __str__(self):
         return str(self.elapsed())
 
     def elapsed(self):
+        """
+        Returns a datetime.timedelta of the timer's elapsed time.
+        """
         if self.__running:
             return datetime.datetime.now() - self.__start
 
