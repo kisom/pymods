@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # file: monitor.py
 # author: kyle isom <coder@kyleisom.net>
+# license: ISC / public domain dual-licensed
 #
 # basic runtime monitoring for broker.
 

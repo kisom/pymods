@@ -1,4 +1,9 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# file: url_tools.py
+# author: kyle isom <coder@kyleisom.net>
+# license: ISC / public domain dual-licensed
+#
 # grab a site's title
 # TODO: add error checking to display()
 

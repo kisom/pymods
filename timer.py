@@ -1,7 +1,9 @@
-# simple python profiling timer
-# Kyle Isom <coder@kyleisom.net>
+# -*- coding: utf-8 -*-
+# file: timer.py
+# author: kyle isom <coder@kyleisom.net>
+# license: ISC / public domain dual-license
 #
-# released under a public domain / ISC dual license.
+# simple python profiling timer
 
 import datetime
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 """
-Contains functions for cleaning tokens of punctuation and invalid characters,
-identifying special characters, and preparing token lists for natural language
-processing. This class is inheritable and provides hooks for subsystem-specific
-parsing.
+Contains functions for cleaning tokens of punctuation and invalid 
+characters, identifying special characters, and preparing token lists for 
+natural language processing. This class is inheritable and provides hooks 
+for subsystem-specific parsing.
 """
 
 import re
@@ -11,77 +11,77 @@ from config import internal_config
 
 class TokenParser():
     """
-    This class takes a list of tokens, processes them, and provides a list of
-    'clean' tokens, separating out special tokens. There are several special
-    methods, all of which do not take arguments:
-        sent:       returns a list of tokens where punctuation is included as
-                    separate elements.
+    This class takes a list of tokens, processes them, and provides a list 
+    of 'clean' tokens, separating out special tokens. There are several 
+    special methods, all of which do not take arguments:
+        sent:       returns a list of tokens where punctuation is included 
+                    as separate elements.
         tokens:     returns a list of the original tokens passed into the
                     parser.
         clean:      returns a list of the clean tokens.
         special:    returns a list of special tokens.
         
     The parser works in three passes:
-        pre_parse:  identify special tokens and add those to the list of special
-                    tokens so they are not lost during the parse.
-        parse:      separates out punctuation into separate elements; creates a
-                    sentence which allows for NLP to parse the original sentence
-                    and a list of cleaned tokens which allows for keyword-
-                    matching.
+        pre_parse:  identify special tokens and add those to the list of 
+                    special tokens so they are not lost during the parse.
+        parse:      separates out punctuation into separate elements; 
+                    creates a sentence which allows for NLP to parse the 
+                    original sentence and a list of cleaned tokens which 
+                    allows for keyword-matching.
         post_parse: any post-processing
         
     Specialized collection systems can inherit this class. In the __init__
     function, set up the hook functions in the config class
-    (self.config._pre_tparse, self.config._do_tparse, self.config._post_tparse) 
-    to run custom code. By default, hooks run before the generic code, but 
-    passing hook_priority = False to the instantiator will cause the hooks to 
-    be run after the built-in functions. Any specialized hook functions and
-    changes to the internal variables should be set up in the derived class's
-    _init_hooks(self) method, which is run between setting up the configuration
-    object and the token representation dictionary. You can define your
-    _pre_tparse and so forth functions here as well as set up custom config vars
-    and regexes (self.regex[key]). There is also a special post-processing
-    function, _post_hooks(). By default, it is an empty function that simply
-    passes. This may be overridden to perform specific post-processing actions.
+    (self.config._pre_tparse, self.config._do_tparse, 
+    self.config._post_tparse) to run custom code. By default, hooks run 
+    before the generic code, but 
+    passing hook_priority = False to the instantiator will cause the hooks 
+    to be run after the built-in functions. Any specialized hook functions 
+    and changes to the internal variables should be set up in the derived 
+    class's _init_hooks(self) method, which is run between setting up the 
+    configuration object and the token representation dictionary. You can 
+    define your _pre_tparse and so forth functions here as well as set up 
+    custom config vars and regexes (self.regex[key]). There is also a 
+    special post-processing function, _post_hooks(). By default, it is an 
+    empty function that simply passes. This may be overridden to perform 
+    specific post-processing actions.
     
     There are two types of parsing passes:
-        token parsers (tparse):       parse each token list comprehension-
-                                        style. generic parse function provided
-                                        by parse_token(). token_parsers
-                                        should return true or false; the
-                                        parse_token function returns the list
-                                        of tokens that matched. See __init__
-                                        for an example of how to use this.
-        sentence parsers (sparse):    parse the token list as a whole.
-                                        sentence parsers should return a list
-                                        of tokens (i.e. a sentence). the
-                                        framework is provided by parse_sent.
+        token parsers (tparse):     parse each token list comprehension-
+                                    style. generic parse function provided
+                                    by parse_token(). token_parsers
+                                    should return true or false; the
+                                    parse_token function returns the list
+                                    of tokens that matched. See __init__
+                                    for an example of how to use this.
+        sentence parsers (sparse):  parse the token list as a whole.
+                                    sentence parsers should return a list
+                                    of tokens (i.e. a sentence). the
+                                    framework is provided by parse_sent.
     
-    Also by default, the __str__ method will return the sentence list, i.e. a
-    list of tokens with punctuation.
+    Also by default, the __str__ method will return the sentence list, 
+    i.e. a list of tokens with punctuation.
     
     Hooks:
-        There are six hooks: a tparse and sparse version of the pre, do, and
-        post-parsing. Ex, _pre_tparse, _do_sparse.
+        There are six hooks: a tparse and sparse version of the pre, do, 
+        and post-parsing. Ex, _pre_tparse, _do_sparse.
     
     Implementing a Derived Class:
-        1. Add any additional TokenDict types, config attributes, regexes, and
-        parse hooks in an overridden _init_hooks method.
-            a. If the derived class should perform its custom parsing functions
-            after the built-in functions, set self.config.hook_priority to
-            False.
-            b. If there are certain custom tokens that should be preserved in
-            the final sentence, append the functions to
+        1. Add any additional TokenDict types, config attributes, regexes, 
+        and parse hooks in an overridden _init_hooks method.
+            a. If the derived class should perform its custom parsing 
+            functions after the built-in functions, set 
+            self.config.hook_priority to False.
+            b. If there are certain custom tokens that should be preserved 
+            in the final sentence, append the functions to 
             self.config.preserve_tokens.
-        2. For any custom parsing functions, ensure they are implemented in the
-        class as per the rules above.
-        3. For any new TokenDict keys, ensure each new key has a self.key() and
-        self.key_str() method that return the raw list and a string of the
-        associated value.
-        4. If there is any custom post-processing to be done, the functions may
-        be added to _post_hooks. This may be useful for filling new TokenDict
-        key values.
-        
+        2. For any custom parsing functions, ensure they are implemented in         the class as per the rules above.
+        3. For any new TokenDict keys, ensure each new key has a self.key() 
+        and self.key_str() method that return the raw list and a string of 
+        the associated value.
+        4. If there is any custom post-processing to be done, the functions 
+        may be added to _post_hooks. This may be useful for filling new 
+        TokenDict key values.
     
     """
 
@@ -114,7 +114,7 @@ class TokenParser():
     ##########################
     
     def __init__(self, tokens):
-        if hasattr(tokens, 'split'):        # if tokens is passed in as a str,
+        if hasattr(tokens, 'split'):        # if tokens is passed in as str,
             tokens = tokens.split(" ")      # convert to a list
             
         self._init_config()
@@ -124,21 +124,22 @@ class TokenParser():
         self.TokenDict['tokens'] = tokens[:]
         
         self.TokenDict['special'].extend(self._parse_tokens(
-                                                    self.config._pre_tparse,
-                                                    self.config.pre_tparsers,
-                                                    tokens[:]))
+                                                self.config._pre_tparse,
+                                                self.config.pre_tparsers,
+                                                tokens[:]))
         self.TokenDict['sent']   = self._parse_sent(
-                                                    self.config._do_sparse,
-                                                    self.config.do_sparsers,
-                                                    tokens[:])
-        self.TokenDict['clean']  = self._clean_tokens(self.TokenDict['sent'])
+                                                self.config._do_sparse,
+                                                self.config.do_sparsers,
+                                                tokens[:])
+        self.TokenDict['clean']  = self._clean_tokens(
+                                                self.TokenDict['sent'])
         self._post_hooks()                  # set up any post processing
         
     def _init_config(self):
         self.config = internal_config( )    
-        self.config.hook_priority   = True
+        self.config.hook_priority = True
         self.config.pre_tparsers  = [ 'self._is_url', 'self._is_emoticon',
-                                        'self._is_stock', 'self._is_email' ]
+                                      'self._is_stock', 'self._is_email' ]
         self.config.pre_sparsers  = [ ]
         self.config.do_tparsers   = [ ]
         self.config.do_sparsers   = [ 'self._replace_punctuation' ]
@@ -161,12 +162,12 @@ class TokenParser():
     
     def _init_token_dict(self):
         self.TokenDict   = { }
-        self.TokenDict['sent']  = [ ]   # stores list of tokens including
-                                            # punctuation & special characters
+        self.TokenDict['sent']      = [ ]   # store list of tokens such as
+                                            # punctuation & special chars
         self.TokenDict['special']   = [ ]   # store special tokens like URLs
         self.TokenDict['clean']     = [ ]   # stores list of tokens without
-                                            # punctuation or special characters
-        self.TokenDict['tokens']    = [ ]   # the original list of tokens the
+                                            # punctuation or special chars
+        self.TokenDict['tokens']    = [ ]   # the original list of tokens 
                                             # instance was instantiated with
     
     def _init_hooks(self):
@@ -216,13 +217,15 @@ class TokenParser():
         """
         Generic parsing pass method.
             hook should be the hook that derived classes can use to provide
-            specific targeting, ex. config._do_parse. The hook will be a pointer
-            to a list of functions, i.e. [ '_is_usertag', '_is_hashtag' ]
+            specific targeting, ex. config._do_parse. The hook will be a 
+            pointer to a list of functions, i.e. [ '_is_usertag', 
+            '_is_hashtag' ]
             
             parsers should be the function list for the pass, i.e.
             config.do_parse
             
-            tokens is the list of tokens to be acted on, i.e. TokenDict['sent'].
+            tokens is the list of tokens to be acted on, i.e. 
+            TokenDict['sent'].
             
             Returns the parsebed list of tokens.
         """
@@ -255,15 +258,17 @@ class TokenParser():
         """
         Generic sentence parsing pass method.
             hook should be the hook that derived classes can use to provide
-            specific targeting, ex. config._do_parse. The hook will be a pointer
-            to a list of functions, i.e. [ '_is_usertag', '_is_hashtag' ]
+            specific targeting, ex. config._do_parse. The hook will be a 
+            pointer to a list of functions, i.e. [ '_is_usertag', 
+            '_is_hashtag' ]
             
             parsers should be the function list for the pass, i.e.
             config.do_parse
             
-            tokens is the list of tokens to be acted on, i.e. TokenDict['sent'].
+            tokens is the list of tokens to be acted on, i.e. 
+            TokenDict['sent'].
             
-            Returns the parsebed list of tokens.        
+            Returns the parsed list of tokens.        
         """
         
         _tokens = tokens
@@ -309,8 +314,8 @@ class TokenParser():
         
         _tokens = tokens
         
-        # strip characters should be stripped from any token and *not* inserted
-        # into a sentence.
+        # strip characters should be stripped from any token and *not* 
+        # inserted into a sentence.
         r = len(_tokens)
         i = 0
         
