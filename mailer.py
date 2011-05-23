@@ -1,5 +1,9 @@
 #!/usr/bin/env python
-# Kyle Isom
+# -*- coding: utc-8 -*-
+# file: mailer.py
+# author: kyle isom <coder@kyleisom.net>
+# license: ISC / public domain dual-licensed
+#
 # wrapper for some of python's email functionality - provides field checking 
 # and formatting
 """
@@ -15,12 +19,12 @@ if not mailer.simple(list_of_recipients, subject_string, body_string) :
     # process the error
 
 The module has been designed so these are the only two functions a user will
-need to run. Both return True or False based on whether the function returned
-successfully or not.
+need to run. Both return True or False based on whether the function 
+returned successfully or not.
 
 If you plan on using some of the other internal functions, bear in mind that
-every function will return a True or False indicating success, except for the
-following processing functions:
+every function will return a True or False indicating success, except for 
+the following processing functions:
     sanitize - returns sanitized version of string
     check_tolist: checks a list of email addresses - returns a string of the
         email address (used by MIMEtext)
@@ -50,9 +54,9 @@ allow_local = False
 
 def sanitize(input_string) :
     """
-    Performs all sanitization functions that I found myself doing repeatedly on
-    multiple variables. Presently strips out leading and trailing whitespace,
-    as well as newlines and carriage returns.
+    Performs all sanitization functions that I found myself doing repeatedly 
+    on multiple variables. Presently strips out leading and trailing 
+    whitespace, as well as newlines and carriage returns.
     """
     input_string = input_string.strip()
     input_string = input_string.replace('\n', '')
@@ -67,30 +71,33 @@ def check_ipv4(ip) :
     """
 
     octet = ip.split('.')
-    if not 4 == len(octet) : return False
+    if not 4 == len(octet): return False
 
     # if the octets aren't ints, reject them
     for i in range(0, len(octet)) :
-        try : octet[i] = int(octet[i])
-        except : return False
+        try:    octet[i] = int(octet[i])
+        except: return False
 
     # reject RFC1918 addresses
-    if not allow_local and 10 == octet[0] : return False
-    if not allow_local and 172 == octet[0] and 15 < octet[1] < 32 : return False
-    if not allow_local and 192 == octet[0] and 0 <= octet[2] <= 255 : return False
+    if not allow_local and 10 == octet[0]: 
+        return False
+    if not allow_local and 172 == octet[0] and 15 < octet[1] < 32: 
+        return False
+    if not allow_local and 192 == octet[0] and 0 <= octet[2] <= 255: 
+        return False
 
     # reject blatantly stupid addresses
-    if octet[0]  < 0: return False
-    if octet[0] > 223 : return False
-    if 255 == octet[3] : return False
-    if 0 == octet[3] : return False
+    if octet[0]  < 0:   return False
+    if octet[0] > 223:  return False
+    if 255 == octet[3]: return False
+    if 0 == octet[3]:   return False
 
     # make sure all the octets are in range
-    for i in range(0, len(octet)) :
-        try :
-            if 255 < octet[i] : return False
-            if 0 > octet[i] : return False
-        except :
+    for i in range(0, len(octet)):
+        try:
+            if 255 < octet[i]:  return False
+            if 0 > octet[i]:    return False
+        except:
             return False
 
     return True
@@ -114,23 +121,25 @@ def check_email(email) :
         user = email
         domain = ""     # use empty string instead of None to simplify
                         # operations that should apply to both
+
     # add support for user@[ip] addresses
-    if '[' == domain[0] and not '[' == domain[len(domain) - 1] :
+    if '[' == domain[0] and not '[' == domain[len(domain) - 1]:
         return False
-    elif not '[' == domain[0] and '[' == domain[len(domain) - 1] :
+    elif not '[' == domain[0] and '[' == domain[len(domain) - 1]:
         return False
-    elif not '[' == domain[0] :
+    elif not '[' == domain[0]:
         pass
-    else :
+    else:
         ip = domain[1:-1]
-        if not check_ipv4(ip) : return False
+        if not check_ipv4(ip): 
+            return False
   
 
-    if '.' == domain[len(domain) - 1] :
+    if '.' == domain[len(domain) - 1]:
         return False
-    elif '.' == domain[0] :
+    elif '.' == domain[0]:
         return False
-    else :
+    else:
         return True
 
 def check_tolist(to_list) :
@@ -142,25 +151,29 @@ def check_tolist(to_list) :
     to_string = ""
 
     # ensure addresses are in proper mailbox format
-    for i in range(0, len(to_list)) : 
+    for i in range(0, len(to_list)): 
         address = to_list[i]
         address = sanitize(address)
-        if not check_email(address) :
+
+        if not check_email(address):
             sys.stderr.write('!! mailer: bad address ' + address + '\n')
             to_list[i] = ''
             continue
-        if not address[0] == '<' :
+        if not address[0] == '<':
             address = "<" + address[:]
-        if not address[len(address) - 1] == ">" :
+        if not address[len(address) - 1] == ">":
             address = address[:] + ">"
+
         to_list[i] = address
 
-    while '' in to_list :
+    while '' in to_list:
         to_list.remove('')
 
-    for i in range(0, len(to_list)) :
+    for i in range(0, len(to_list)):
         to_string = to_string + to_list[i] + ", "
-    to_string = to_string[:-2]                  # remove final comma and space
+    
+    # remove final comma and space
+    to_string = to_string[:-2]
 
     return to_string
 
