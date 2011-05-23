@@ -1,3 +1,8 @@
+# -*- coding: utf-8 -*-
+# file: url_parser.py
+# author: kyle isom
+# license: ISC / public domain dual-licensed
+#
 # url scanning token parser
 
 from token_parser import TokenParser

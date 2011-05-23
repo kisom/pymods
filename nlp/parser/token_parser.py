@@ -1,4 +1,10 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# file: token_parser.py
+# author: kyle isom <coder@kyleisom.net>
+# license: ISC / public domain dual-license
+#
+# crude NLP code
 """
 Contains functions for cleaning tokens of punctuation and invalid 
 characters, identifying special characters, and preparing token lists for 
