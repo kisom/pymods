@@ -238,8 +238,8 @@ def simple(to_list, subject = "", body = "") :
 
     """
 
-    mail = _build_message(to_list, subject, body)
-    _send(mail, to_list)
+    mail = build_message(to_list, subject, body)
+    send(mail, to_list)
 
 
     return True
@@ -283,7 +283,7 @@ def with_text(to_list, subject = "", body = "", file_list = []):
         Build a multipart message with the plain text files specified in
         file_list and send that off to the wide wide world.
     """
-    mail = _build_message(to_list, subject, body)
+    mail = build_message(to_list, subject, body)
     mail = attach_text(mail, file_list)
     return send(mail, to_list)
 
