@@ -339,13 +339,13 @@ if __name__ == "__main__" :
         if opt is 'f':
             files.append(val)
 
-        if files:
-            res = with_text(to, subj, body, files)
-        else:
-            res = simple(to, subj, body)
+    if files:
+        res = with_text(to, subj, body, files)
+    else:
+        res = simple(to, subj, body)
         
-        if res:
-            print 'successfully sent message!'
-        else:
-            print 'failed to send message!'
+    if res:
+        print 'successfully sent message!'
+    else:
+        print 'failed to send message!'
 
