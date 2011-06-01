@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# -*- coding: utc-8 -*-
+# -*- coding: utf-8 -*-
 # file: mailer.py
 # author: kyle isom <coder@kyleisom.net>
 # license: ISC / public domain dual-licensed
@@ -21,6 +21,13 @@ if not mailer.simple(list_of_recipients, subject_string, body_string) :
 The module has been designed so these are the only two functions a user will
 need to run. Both return True or False based on whether the function 
 returned successfully or not.
+
+Important methods:
+    simple: simple send email
+    with_text: simple email with text attachments
+    build_message: build a mulitpart message base (for attaching attachments to)
+    attach_text: attach text files to a message
+    send: send an email
 
 If you plan on using some of the other internal functions, bear in mind that
 every function will return a True or False indicating success, except for 
@@ -45,7 +52,10 @@ TODO:
 """
 
 
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+from email.mime.audio import MIMEAudio
 import smtplib
 import sys
 
@@ -177,6 +187,37 @@ def check_tolist(to_list) :
 
     return to_string
 
+def build_message(to_list, subject = "", body = ""):
+    if not to_list :
+        return False
+
+    if not subject and not body :
+        return False
+
+    to_string = check_tolist(to_list)
+    if subject :
+        subject = sanitize(subject)    
+
+    mail = MIMEMultipart()
+    mail['subject'] = subject
+    mail['To']      = to_string
+    mail['From']    = get_sender()
+    mail.preamble   = "pymailer message follows"
+    mail.attach(MIMEText(body))
+
+    return mail
+
+def send(email, to_list):
+    s = smtplib.SMTP()
+    try:
+        s.connect('localhost')
+        s.sendmail(get_sender(), to_list, email.as_string())
+    except smtplib.SMTPException as e:
+        print e
+        return False
+    else:
+        return True
+
 
 def simple(to_list, subject = "", body = "") :
     """
@@ -197,24 +238,9 @@ def simple(to_list, subject = "", body = "") :
 
     """
 
-    if not to_list :
-        return False
+    mail = _build_message(to_list, subject, body)
+    _send(mail, to_list)
 
-    if not subject and not body :
-        return False
-
-    to_string = check_tolist(to_list)
-    if subject :
-        subject = sanitize(subject)    
-
-    email = MIMEText(body)
-    email['subject'] = subject
-    email['To'] = to_string
-    email['From'] = get_sender()
-
-    s = smtplib.SMTP()
-    s.connect('localhost')
-    s.sendmail(get_sender(), to_list, email.as_string())
 
     return True
     
@@ -228,7 +254,6 @@ def set_sender(new_sender) :
 
     new_sender = sanitize(new_sender)
     new_sender = check_tolist([ new_sender ])
-    
 
     if not new_sender or not check_email(new_sender):
         return False
@@ -253,6 +278,35 @@ def local_allowed() :
 
     return allow_local
 
+def with_text(to_list, subject = "", body = "", file_list = []):
+    """
+        Build a multipart message with the plain text files specified in
+        file_list and send that off to the wide wide world.
+    """
+    mail = _build_message(to_list, subject, body)
+    mail = attach_text(mail, file_list)
+    return send(mail, to_list)
+
+
+def attach_text(mail, file_list):
+    """
+        Takes a MIME multipart message object 'mail' and attaches the
+        files specified in file_list (which should be the full filenames
+        of plain text files to be attached), and returns the message with
+        attachments.
+    """
+    for file in file_list:
+        try:
+            f = open(file)
+        except IOError as e:
+            print e
+            print 'failed to attach', file
+            pass
+        txt = MIMEText(f.read())
+        txt.add_header('Content-Disposition', 'attachment', filename = file)
+        mail.attach(msg)
+
+    return mail
 
 if __name__ == "__main__" :
     pass
