@@ -57,6 +57,7 @@ from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 from email.mime.audio import MIMEAudio
 import getopt
+import os
 import smtplib
 import sys
 
@@ -88,8 +89,7 @@ def check_ipv4(ip) :
     for i in range(0, len(octet)) :
         try:    octet[i] = int(octet[i])
         except: return False
-
-    # reject RFC1918 addresses
+ RFC1918 addresses
     if not allow_local and 10 == octet[0]: 
         return False
     if not allow_local and 172 == octet[0] and 15 < octet[1] < 32: 
@@ -304,7 +304,8 @@ def attach_text(mail, file_list):
             print 'failed to attach', file
             pass
         txt = MIMEText(f.read())
-        txt.add_header('Content-Disposition', 'attachment', filename = file)
+        txt.add_header('Content-Disposition', 'attachment', 
+                       filename = os.path.basename(file))
         mail.attach(txt)
 
     return mail
