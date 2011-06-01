@@ -304,10 +304,47 @@ def attach_text(mail, file_list):
             pass
         txt = MIMEText(f.read())
         txt.add_header('Content-Disposition', 'attachment', filename = file)
-        mail.attach(msg)
+        mail.attach(txt)
 
     return mail
 
 if __name__ == "__main__" :
-    pass
+    # usage:
+    # -t <to> add a person to the to-list
+    # -s <subj> add a subject line
+    # -b <body> add the body
+    # -f <file> attach file 
+    # -r <addr> set from
+    opts, args = getopt.getopt(sys.argv[1:], 'r:t:s:b:f:')
+
+    to = [ ]
+    files = [ ]
+    subj = "pymailer message"
+    body = "EOF"
+    res = False                                  # default result is False 
+                                                 # because we haven't sent
+                                                 # anything yet
+
+    for opt, val in opts:
+        opt = opt.lstrip('-')
+        if opt is 't':
+            to.append(val)
+        if opt is 'r':
+            set_sender(val)
+        if opt is 's':
+            subj = val
+        if opt is 'b':
+            body = val
+        if opt is 'f':
+            files.append(val)
+
+        if files:
+            res = with_text(to, subj, body, files)
+        else:
+            res = simple(to, subj, body)
+        
+        if res:
+            print 'successfully sent message!'
+        else:
+            print 'failed to send message!'
 
