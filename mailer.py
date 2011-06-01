@@ -189,6 +189,7 @@ def check_tolist(to_list) :
     return to_string
 
 def build_message(to_list, subject = "", body = ""):
+    print 'building message...'
     if not to_list :
         return False
 
@@ -209,6 +210,7 @@ def build_message(to_list, subject = "", body = ""):
     return mail
 
 def send(email, to_list):
+    print 'sending...'
     s = smtplib.SMTP()
     try:
         s.connect('localhost')
@@ -306,6 +308,7 @@ def attach_text(mail, file_list):
         txt = MIMEText(f.read())
         txt.add_header('Content-Disposition', 'attachment', filename = file)
         mail.attach(txt)
+        print 'attached', file, 'to message'
 
     return mail
 
