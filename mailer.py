@@ -89,7 +89,7 @@ def check_ipv4(ip) :
     for i in range(0, len(octet)) :
         try:    octet[i] = int(octet[i])
         except: return False
- RFC1918 addresses
+    # RFC1918 addresses
     if not allow_local and 10 == octet[0]: 
         return False
     if not allow_local and 172 == octet[0] and 15 < octet[1] < 32: 
