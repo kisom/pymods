@@ -10,7 +10,7 @@ import sys
 import time
 import urllib2
 
-from rest_api import RestApi
+from restapi import RestApi
 
 
 class JsonApi (RestApi):
