@@ -5,12 +5,14 @@
 # rest interface
 
 import base64
+import httplib
 import sys
 import time
 import urllib2
 
 class RestApi:
     api_base = None                                   # base URI for API
+    secure   = None
     debug    = None                                   # used for __trace__
     authtype = None                                   # type of auth token
     auth_token = None                                 # authentication token
@@ -21,6 +23,8 @@ class RestApi:
     last_error = None
     last_req   = None
 
+    supported_methods = [ 'GET', 'POST' ]
+
     def __init__(self, api_base, debug = False, authtype = None,
                  username = None, password = None, auth_token = None,
                  content_t = None):
@@ -28,6 +32,11 @@ class RestApi:
         ADD DOCS
         """
         self.api_base = api_base.lower()
+
+        if self.api_base.startswith('https'):
+            self.secure   = True
+            self.api_base = self.api_base.strip('https://')
+        self.api_base = self.api_base.strip('http://')
         self.debug    = debug
         self.authtype = authtype.lower()
 
@@ -86,60 +95,33 @@ class RestApi:
             print message
 
 
-    def __build__(self, request, *args):
-        req = '%s/%s' % (self.api_base, request)
 
-        for arg in args:
-            if not arg: break
-
-            try:
-                req = req % arg
-
-            except TypeError as e:
-                break
-
-        return req
-
-
-    def __fetch__(self, request, data = None):
+    def __fetch__(self, request, data = None, method = "GET"):
         self.__trace__( 'building request...' )
-        self.__trace__('fetching: post %s to %s' % (data, request))
+        if not method in self.supported_methods:
+            self.__trace__('%s is an unsupported method!' % method)
+            return None
 
-        if data:
-            req = urllib2.Request(request, data, self.headers)
+        if not self.secure:
+            req = httplib.HTTPConnection(self.api_base)
         else:
-            req = urllib2.Request(request)
+            req = httplib.HTTPSConnection(self.api_base)
+            
+        req.request(method, request, data, self.headers)
 
-            for k,v in self.headers.iteritems():
-                req.add_header(k, v)
+        response = req.getresponse()
+        res = { 'status': response.status,
+                'data': self.__process_data__(response.read()) }
 
+        
         self.last_req = req
         self.__trace__( 'request->%s' % request )
-        self.__trace__('request type: %s' % req.get_method())
+        #self.__trace__('request type: %s' % req.get_method())
 
         if self.api_base.startswith('https'):
             self.__trace__('WARNING: urllib2 does *not* verify SSL certs')
 
-        try:
-            res     = urllib2.urlopen(req)
-            
-        except urllib2.HTTPError, e:
-            if e.getcode() == 403:
-                self.__trace__( 'backing off - encountered error: %s' % e )
-                
-                time.sleep(5)
-                res     = self.__fetch__(request, data)
-            else:
-                self.__trace__( 'received HTTP error %d (%s)' % (e.code,
-                                                                 e.msg), True )
-                self.__trace__( 'message: %s' % e.read(), True )
-                err_code = e.code - 399
-                self.last_error = e
-                return None
-        except:
-            raise
-
-        return self.__process_data__(res.read())
+        return res
 
     def __process_data__(self, data):
         return data
@@ -147,7 +129,7 @@ class RestApi:
     def __auth__(self):
         if 'basic' == self.authtype:
             try:
-                res = self.get('')
+                res = self.get('/')
 
             except urllib2.HTTPError as e:
                 if 401 == e.getcode():
@@ -160,17 +142,16 @@ class RestApi:
                 return True        
 
     def get(self, request, *args):
-        req = self.__build__(request, args)
-        res = self.__fetch__(req, None)
+        #req = self.__build__(request, args)
+        res = self.__fetch__(request, data = None, method = 'GET')
 
         return res
 
     def post(self, request, data, *args):
         # build request and send data
         self.__trace__('posting %s to %s' % (data, request))
-        req  = self.__build__(request, args)
-        req  = '%s/%s' % (self.api_base, request)
-        res  = self.__fetch__(req, data)
+        #req  = self.__build__(request, args)
+        res  = self.__fetch__(request, data = data, method = 'POST')
 
         return res
 
