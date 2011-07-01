@@ -28,7 +28,7 @@ def main(args):
     
 """
 
-import utils.mailer as mail
+import mailer as mail
 import pdb
 import pickle
 import sys
