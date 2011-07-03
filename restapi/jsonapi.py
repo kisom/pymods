@@ -30,7 +30,7 @@ class JsonApi (RestApi):
             return res
 
     def get(self, request, *args):
-        res = RestApi.post(self, request, args)
+        res = RestApi.get(self, request, args)
         if res:
             res = self.__decode__(res['data'])
 

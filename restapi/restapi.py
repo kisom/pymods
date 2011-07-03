@@ -38,7 +38,9 @@ class RestApi:
             self.api_base = self.api_base.strip('https://')
         self.api_base = self.api_base.strip('http://')
         self.debug    = debug
-        self.authtype = authtype.lower()
+
+        if self.authtype:
+            self.authtype = authtype.lower()
 
         self.__trace__('initialising...')
 
@@ -96,7 +98,7 @@ class RestApi:
 
 
 
-    def __fetch__(self, request, data = None, method = "GET"):
+    def __fetch__(self, request, data = None, method = "GET", return_headers = False):
         self.__trace__( 'building request...' )
         if not method in self.supported_methods:
             self.__trace__('%s is an unsupported method!' % method)
@@ -106,14 +108,21 @@ class RestApi:
             req = httplib.HTTPConnection(self.api_base)
         else:
             req = httplib.HTTPSConnection(self.api_base)
-            
-        req.request(method, request, data, self.headers)
+
+        if data:
+            req.request(method, request, data, self.headers)
+        else:
+            req.request(method, request, headers = self.headers)
 
         response = req.getresponse()
-        res = { 'status': response.status,
-                'data': self.__process_data__(response.read()) }
 
-        
+        if not return_headers:
+            res = { 'status': response.status,
+                    'data': self.__process_data__(response.read()) }
+
+        else:
+            res = response
+            
         self.last_req = req
         self.__trace__( 'request->%s' % request )
         #self.__trace__('request type: %s' % req.get_method())
@@ -139,19 +148,37 @@ class RestApi:
                 else:
                     raise
             else:
-                return True        
+                return True
+        else:
+            return False
 
     def get(self, request, *args):
-        #req = self.__build__(request, args)
-        res = self.__fetch__(request, data = None, method = 'GET')
+        #self.___trace__('sending GET request...')
+        res = self.__fetch__(request)
 
         return res
 
     def post(self, request, data, *args):
-        # build request and send data
-        self.__trace__('posting %s to %s' % (data, request))
-        #req  = self.__build__(request, args)
+        
         res  = self.__fetch__(request, data = data, method = 'POST')
 
         return res
 
+    def patch(self, request, data, *args):
+        res  = self.__fetch__(request, data = data, method = 'PATCH')
+
+        return res
+    
+    def rate_limit(self):
+        res = self.__fetch__('/', return_headers=True)
+        headers = res.getheaders()
+
+        remaining   = -1
+        limit       = -1
+
+        for header, value in headers:
+            if 'ratelimit-remaining' in header:
+                remaining = int(value)
+            elif 'ratelimit-limit' in header:
+                limit = int(value)
+        return remaining, limit
