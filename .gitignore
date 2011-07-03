@@ -2,6 +2,6 @@
 .*.swp
 *.*~
 .hg
-
+.idea
 
 restapi/.#restapi.py
