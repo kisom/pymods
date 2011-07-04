@@ -6,9 +6,12 @@
 
 import base64
 import httplib
-import sys
-import time
 import urllib2
+
+class NoAuthType(Exception):
+
+    def __init__(self):
+        pass
 
 class RestApi:
     api_base = None                                   # base URI for API
@@ -23,7 +26,7 @@ class RestApi:
     last_error = None
     last_req   = None
 
-    supported_methods = [ 'GET', 'POST' ]
+    supported_methods = [ 'GET', 'POST', 'PATCH', 'DELETE' ]
 
     def __init__(self, api_base, debug = False, authtype = None,
                  username = None, password = None, auth_token = None,
@@ -39,7 +42,7 @@ class RestApi:
         self.api_base = self.api_base.strip('http://')
         self.debug    = debug
 
-        if self.authtype:
+        if authtype:
             self.authtype = authtype.lower()
 
         self.__trace__('initialising...')
@@ -98,7 +101,7 @@ class RestApi:
 
 
 
-    def __fetch__(self, request, data = None, method = "GET", return_headers = False):
+    def __fetch__(self, request, data = None, method = "GET", return_response = False):
         self.__trace__( 'building request...' )
         if not method in self.supported_methods:
             self.__trace__('%s is an unsupported method!' % method)
@@ -116,9 +119,12 @@ class RestApi:
 
         response = req.getresponse()
 
-        if not return_headers:
-            res = { 'status': response.status,
-                    'data': self.__process_data__(response.read()) }
+        if not return_response:
+            if response.status == 204:
+                res = True
+            else:
+                res = { 'status': response.status,
+                        'data': self.__process_data__(response.read()) }
 
         else:
             res = response
@@ -150,7 +156,7 @@ class RestApi:
             else:
                 return True
         else:
-            return False
+            raise NoAuthType
 
     def get(self, request, *args):
         #self.___trace__('sending GET request...')
@@ -167,10 +173,12 @@ class RestApi:
     def patch(self, request, data, *args):
         res  = self.__fetch__(request, data = data, method = 'PATCH')
 
+    def delete(self, request, data = None, *args):
+        res  = self.__fetch__(request, data = data, method = 'DELETE')
         return res
     
     def rate_limit(self):
-        res = self.__fetch__('/', return_headers=True)
+        res = self.__fetch__('/', return_response=True)
         headers = res.getheaders()
 
         remaining   = -1
