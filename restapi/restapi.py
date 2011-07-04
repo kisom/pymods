@@ -26,7 +26,7 @@ class RestApi:
     last_error = None
     last_req   = None
 
-    supported_methods = [ 'GET', 'POST', 'PATCH', 'DELETE' ]
+    supported_methods = [ 'GET', 'POST', 'PATCH', 'DELETE', 'HEAD' ]
 
     def __init__(self, api_base, debug = False, authtype = None,
                  username = None, password = None, auth_token = None,
@@ -133,8 +133,8 @@ class RestApi:
         self.__trace__( 'request->%s' % request )
         #self.__trace__('request type: %s' % req.get_method())
 
-        if self.api_base.startswith('https'):
-            self.__trace__('WARNING: urllib2 does *not* verify SSL certs')
+        if self.secure:
+            self.__trace__('WARNING: httplib does *not* verify SSL certs')
 
         return res
 
@@ -176,6 +176,10 @@ class RestApi:
     def delete(self, request, data = None, *args):
         res  = self.__fetch__(request, data = data, method = 'DELETE')
         return res
+
+    def head(self, request):
+        res  = self.__fetch__(request, method = 'HEAD', return_response = True)
+        return res.getheaders()
     
     def rate_limit(self):
         res = self.__fetch__('/', return_response=True)
