@@ -134,12 +134,12 @@ def _dump_traceback():
     return str(e[0]), str(e[1]), ex
 
 
-def _handle_development():
+def _handle_development(stack):
     raise()
     
-def _handle_staging():
-    _handle_production()        # first do what we'd do in production
-    _handle_development()       # then do what we'd do in development
+def _handle_staging(stack):
+    _handle_production(stack)       # first do what we'd do in production
+    _handle_development(stack)      # then do what we'd do in development
     
-def _handle_production():
+def _handle_production(stack):
     mail.simple(devs, subject = 'stack dump', body = stack[2])
