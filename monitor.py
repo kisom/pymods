@@ -91,7 +91,7 @@ def Monitor(target, **kwargs):
     Primary Monitor function to ensure proper error handling.
     """
     target_args     =  ''
-    mailer.set_sender(sender)
+    mail.set_sender(sender)
     
     while True:
         try:
