@@ -103,7 +103,7 @@ def Monitor(target, **kwargs):
         except KeyboardInterrupt:           # die on ^C - for attach processes
             return
         except Exception as e:
-            stack = _dump_traceback()
+            stack = _dump_traceback(e)
             
             if development_p(): _handle_development(stack)
             if staging_p():     _handle_staging(stack)
@@ -123,7 +123,7 @@ def testf(exception_type):
         time.sleep(1)
     
             
-def _dump_traceback():
+def _dump_traceback(e):
     """
     internal function to dump the traceback to a string
     """
