@@ -103,7 +103,7 @@ def Monitor(target, **kwargs):
         except KeyboardInterrupt:           # die on ^C - for attach processes
             return
         except Exception as e:
-            stack = dump_traceback()
+            stack = _dump_traceback()
             
             if development_p(): _handle_development(stack)
             if staging_p():     _handle_staging(stack)
