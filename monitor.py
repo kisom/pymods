@@ -131,7 +131,8 @@ def _dump_traceback(e):
     traceback.print_exc(file=tracer)
     ex      = tracer.read()
     
-    return str(e[0]), str(e[1]), ex
+    #return str(e[0]), str(e[1]), ex
+    return ex
 
 
 def _handle_development():
@@ -142,4 +143,4 @@ def _handle_staging():
     _handle_development()       # then do what we'd do in development
     
 def _handle_production():
-    mail.simple(devs, subject = 'stack dump', body = stack[2])
+    mail.simple(devs, subject = 'stack dump', body = stack)
