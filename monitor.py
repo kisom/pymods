@@ -7,7 +7,8 @@
 # basic runtime monitoring for broker.
 
 """
-monitor for automated broker. alerts dev team on exceptions.
+monitor originally designed for use in an automated broker. alerts dev team
+on exceptions.
 
 there are three modes supported:
     * production
@@ -23,76 +24,109 @@ mode is set and the function's run() function is called. for example:
 
 def main(args):
     if not monitor.production_p(): monitor.toggle_production()
-    
+
     monitor.Monitor(run())
-    
+
+
 """
 
 import mailer as mail
-import pdb
-import pickle
+import datetime
+import os
 import sys
 import time
 import traceback
-    
-devs                = [ 'coder@kyleisom.net' ]
-sender              = 'pymon@brokenlcd.net'
-production          = False
-staging             = False
-development         = False
+
+GLOBALS = {
+    'devs': None,
+    'sender': None,
+    'production': False,
+    'staging': False,
+    'development': False,
+}
+
 
 def toggle_production():
-    global production
-    
-    production = not production
-    
+    """
+    Toggle production-mode behaviour.
+    """
+    GLOBALS['production'] = not GLOBALS['production']
+
+
 def production_p():
-    return production
+    """
+    Indicate whether we are in production-mode.
+    """
+    return GLOBALS['production']
+
 
 def toggle_staging():
-    global staging
-    
-    staging = not staging
+    """
+    Toggle staging-mode behaviour.
+    """
+    GLOBALS['staging'] = not GLOBALS['staging']
+
 
 def staging_p():
-    return staging
+    """
+    Indicate whether we are in staging-mode.
+    """
+    return GLOBALS['staging']
+
 
 def toggle_development():
-    global development
-    
-    development = not development
+    """
+    Toggle development-mode behaviour.
+    """
+    GLOBALS['development'] = not GLOBALS['development']
+
 
 def development_p():
-    return development
-    
+    """
+    Indicate whether we are in development-mode.
+    """
+    return GLOBALS['development']
+
 
 class Traceback:
     """
     Internal traceback class, currently only a very basic file target for
     traceback.print_foo()
     """
-    s       = None
-    
+    buf = None
+
     def __init__(self):
         self.clear()
-    
+
     def clear(self):
-        self.s  = ''
-    
-    def write(self, s):
-        self.s += s
-        
+        """
+        Wipe the traceback buffer.
+        """
+        self.buf = ''
+
+    def write(self, buf):
+        """
+        Append more data to the traceback buffer.
+        """
+        self.buf += buf
+
     def read(self):
-        return self.s
+        """
+        Read out the buffer.
+        """
+        return self.buf
 
 
-def Monitor(target, **kwargs):
+def monitor(target, **kwargs):
     """
     Primary Monitor function to ensure proper error handling.
     """
-    target_args     =  ''
-    mail.set_sender(sender)
-    
+
+    if not GLOBALS['devs'] or not GLOBALS['sender']:
+        raise Exception("need to initialise devs and sender!")
+
+    mail.set_sender(GLOBALS['sender'])
+
     while True:
         try:
             # should we pass args in or not?
@@ -102,45 +136,108 @@ def Monitor(target, **kwargs):
                 target()
         except KeyboardInterrupt:           # die on ^C - for attach processes
             return
-        except Exception as e:
-            stack = _dump_traceback(e)
-            
-            if development_p(): _handle_development(stack)
-            if staging_p():     _handle_staging(stack)
-            if production_p():  _handle_production(stack)
+        except Exception as error:
+            stack = _dump_traceback(error)[0]
+
+            if development_p():
+                _handle_development(stack, error)
+            if staging_p():
+                _handle_staging(stack, error)
+            if production_p():
+                _handle_production(stack)
 
 
-def testf(exception_type):
+def initialise(devs=None, sender=None):
+    """
+    Initialise the monitor with the list of developers to email and the
+    sender to send mail as. A global is only set if it is non-NULL.
+    """
+    if sender:
+        GLOBALS['sender'] = sender
+    if devs:
+        GLOBALS['devs'] = devs
+
+
+def test(delay=1):
+    """
+    Test the monitor functionality.
+    """
+    while True:
+        monitor(testmon, delay=delay)
+
+
+def testmon(delay=1):
+    """
+    A quick function to test the Monitor function. Call it like this:
+
+    monitor.Monitor(testmon, { 'delay': 5 })
+
+    You can also test the module with monitor.test(delay = 5)
+
+    It will run and randomly throw exceptions, handling the exception the
+    appropriate way.
+    """
+    import random
+
+    exception_list = [IOError, KeyError, Exception, SystemError]
+    while True:
+        if 2 == random.randint(1, 2):
+            __testf(random.choice(exception_list))
+        time.sleep(delay)
+
+
+def __testf(exception_type):
     """
     test function to mess with Monitor functionality. throws a weird error on
     purpose.
     """
     time.sleep(1)
-    
+
     if exception_type:
-        raise SystemError
+        raise exception_type
     else:
         time.sleep(1)
-    
-            
-def _dump_traceback(e):
+
+
+def _dump_traceback(error):
     """
     internal function to dump the traceback to a string
     """
-    tracer  = Traceback()
+    tracer = Traceback()
     traceback.print_exc(file=tracer)
-    ex      = tracer.read()
-    
-    #return str(e[0]), str(e[1]), ex
-    return ex
+    stack = tracer.read()
+
+    return stack, error
 
 
-def _handle_development(stack):
-    raise()
-    
-def _handle_staging(stack):
-    _handle_production(stack)       # first do what we'd do in production
-    _handle_development(stack)      # then do what we'd do in development
-    
+def _handle_development(stack, error):
+    """
+    Handle development-mode. By default, raises the Exception.
+    """
+    print stack
+
+    raise(error)
+
+
+def _handle_staging(stack, error):
+    """
+    Handle staging-mode: execute production-mode then development-mode.
+    """
+    _handle_production(stack)           # first do what we'd do in production
+    _handle_development(stack, error)   # then do what we'd do in development
+
+
 def _handle_production(stack):
-    mail.simple(devs, subject = 'stack dump', body = stack)
+    """
+    Handle production-mode. By default, sends an email to the devs.
+    """
+    devs = GLOBALS['devs']
+    subject = 'stack dump for %s (pid %d)' % (sys.argv[0], os.getpid())
+    body = 'fault occurred at %s\n-----\n\n%s\n' % (
+        datetime.datetime.utcnow(),
+        stack
+    )
+    body += '\n (automated email sent by the python monitor module ('
+    body += 'https://github.com/kisom/pymods)'
+
+    mail.simple(devs, subject=subject, body=body)
