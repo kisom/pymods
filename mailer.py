@@ -4,33 +4,34 @@
 # author: kyle isom <coder@kyleisom.net>
 # license: ISC / public domain dual-licensed
 #
-# wrapper for some of python's email functionality - provides field checking 
+# wrapper for some of python's email functionality - provides field checking
 # and formatting
 """
 mailer
 
-This provides a simple way to send emails while still sanitizing fields and 
+This provides a simple way to send emails while still sanitizing fields and
 preventing bad fields from being sent out. The module is simple to use:
 
 import mailer
-if not mailer.set_sender('john.q.public@megacorp.net') : 
+if not mailer.set_sender('john.q.public@megacorp.net'):
     # process the error
-if not mailer.simple(list_of_recipients, subject_string, body_string) :
+if not mailer.simple(list_of_recipients, subject_string, body_string):
     # process the error
 
 The module has been designed so these are the only two functions a user will
-need to run. Both return True or False based on whether the function 
+need to run. Both return True or False based on whether the function
 returned successfully or not.
 
 Important methods:
     simple: simple send email
     with_text: simple email with text attachments
-    build_message: build a mulitpart message base (for attaching attachments to)
+    build_message: build a mulitpart message base (for attaching
+        attachments to)
     attach_text: attach text files to a message
     send: send an email
 
 If you plan on using some of the other internal functions, bear in mind that
-every function will return a True or False indicating success, except for 
+every function will return a True or False indicating success, except for
 the following processing functions:
     sanitize - returns sanitized version of string
     check_tolist: checks a list of email addresses - returns a string of the
@@ -61,13 +62,14 @@ import os
 import smtplib
 import sys
 
-sender = [ "pymailer" ]
+sender = ["pymailer"]
 allow_local = False
 
-def sanitize(input_string) :
+
+def sanitize(input_string):
     """
-    Performs all sanitization functions that I found myself doing repeatedly 
-    on multiple variables. Presently strips out leading and trailing 
+    Performs all sanitization functions that I found myself doing repeatedly
+    on multiple variables. Presently strips out leading and trailing
     whitespace, as well as newlines and carriage returns.
     """
     input_string = input_string.strip()
@@ -77,31 +79,33 @@ def sanitize(input_string) :
     input_string = input_string.replace('\x0d', '')
     return input_string
 
-def check_ipv4(ip) :
+
+def check_ipv4(ip):
     """
     Checks IP addresses for sanity.
     """
 
     octet = ip.split('.')
-    if not 4 == len(octet): return False
+    if not 4 == len(octet): 
+        return False
 
     # if the octets aren't ints, reject them
-    for i in range(0, len(octet)) :
+    for i in range(0, len(octet)):
         try:    octet[i] = int(octet[i])
         except: return False
     # RFC1918 addresses
-    if not allow_local and 10 == octet[0]: 
+    if not allow_local and 10 == octet[0]:
         return False
-    if not allow_local and 172 == octet[0] and 15 < octet[1] < 32: 
+    if not allow_local and 172 == octet[0] and 15 < octet[1] < 32:
         return False
-    if not allow_local and 192 == octet[0] and 0 <= octet[2] <= 255: 
+    if not allow_local and 192 == octet[0] and 0 <= octet[2] <= 255:
         return False
 
     # reject blatantly stupid addresses
-    if octet[0]  < 0:   return False
-    if octet[0] > 223:  return False
-    if 255 == octet[3]: return False
-    if 0 == octet[3]:   return False
+    if octet[0] < 0:            return False
+    if octet[0] > 223:          return False
+    if 255 == octet[3]:         return False
+    if 0 == octet[3]:           return False
 
     # make sure all the octets are in range
     for i in range(0, len(octet)):
@@ -113,22 +117,23 @@ def check_ipv4(ip) :
 
     return True
 
-def check_email(email) :
+
+def check_email(email):
     # number of times @ symbol appears - it should *never*
     # apear more than once and may not appear if local
     # addresses are being used
 
-    atsym_n = email.count('@')                  
-    if 1 < atsym_n :
+    atsym_n = email.count('@')
+    if 1 < atsym_n:
         return False
-    elif 0 == atsym_n and not allow_local :
+    elif 0 == atsym_n and not allow_local:
         return False
-    else :
+    else:
         pass
 
-    if email.count('@') :
+    if email.count('@'):
         user, domain = email.split('@')
-    else :
+    else:
         user = email
         domain = ""     # use empty string instead of None to simplify
                         # operations that should apply to both
@@ -142,9 +147,8 @@ def check_email(email) :
         pass
     else:
         ip = domain[1:-1]
-        if not check_ipv4(ip): 
+        if not check_ipv4(ip):
             return False
-  
 
     if '.' == domain[len(domain) - 1]:
         return False
@@ -153,7 +157,7 @@ def check_email(email) :
     else:
         return True
 
-def check_tolist(to_list) :
+def check_tolist(to_list):
     """
         Checks the list of recipients. Returns a string of email addresses
         in the format expected by smtplib.
@@ -162,7 +166,7 @@ def check_tolist(to_list) :
     to_string = ""
 
     # ensure addresses are in proper mailbox format
-    for i in range(0, len(to_list)): 
+    for i in range(0, len(to_list)):
         address = to_list[i]
         address = sanitize(address)
 
@@ -182,22 +186,22 @@ def check_tolist(to_list) :
 
     for i in range(0, len(to_list)):
         to_string = to_string + to_list[i] + ", "
-    
+
     # remove final comma and space
     to_string = to_string[:-2]
 
     return to_string
 
 def build_message(to_list, subject = "", body = ""):
-    if not to_list :
+    if not to_list:
         return False
 
-    if not subject and not body :
+    if not subject and not body:
         return False
 
     to_string = check_tolist(to_list)
-    if subject :
-        subject = sanitize(subject)    
+    if subject:
+        subject = sanitize(subject)
 
     mail = MIMEMultipart()
     mail['subject'] = subject
@@ -220,9 +224,9 @@ def send(email, to_list):
         return True
 
 
-def simple(to_list, subject = "", body = "") :
+def simple(to_list, subject = "", body = ""):
     """
-        simple(to_list = [], subject = "mailer.py", body = "") 
+        simple(to_list = [], subject = "mailer.py", body = "")
 
         to_list should be a list of email addresses. If they are not already in
         the standard angle format, they will be converted to that format, i.e.
@@ -232,8 +236,8 @@ def simple(to_list, subject = "", body = "") :
             [ '<joe.bloe@megacorp.net>', '<important.person@megacorp.net>' ]
 
         Both subject and body should be strings. While care should be taken in
-        what is passed into the function, subject will be stripped of any 
-        newlines and carriage returns. Body is not touched as the python 
+        what is passed into the function, subject will be stripped of any
+        newlines and carriage returns. Body is not touched as the python
         smtplib should be able to handle anything that can be represented as
         a string.
 
@@ -244,8 +248,8 @@ def simple(to_list, subject = "", body = "") :
 
 
     return True
-    
-def set_sender(new_sender) :
+
+def set_sender(new_sender):
     """
         set_sender(new_sender = "")
 
@@ -258,21 +262,21 @@ def set_sender(new_sender) :
 
     if not new_sender or not check_email(new_sender):
         return False
-    else :
+    else:
         sender[0] = "\"pymailer\" "+ new_sender
         return True
 
-def get_sender() :
+def get_sender():
     return sender[0]
 
-def toggle_local() :
+def toggle_local():
     """
         Toggles the value of allow_local.
     """
     allow_local = not allow_local
     return True
 
-def local_allowed() :
+def local_allowed():
     """
         If true, local addresses (i.e. user v. user@somehost) are allowed.
     """
@@ -304,18 +308,18 @@ def attach_text(mail, file_list):
             print 'failed to attach', file
             pass
         txt = MIMEText(f.read())
-        txt.add_header('Content-Disposition', 'attachment', 
+        txt.add_header('Content-Disposition', 'attachment',
                        filename = os.path.basename(file))
         mail.attach(txt)
 
     return mail
 
-if __name__ == "__main__" :
+if __name__ == "__main__":
     # usage:
     # -t <to> add a person to the to-list
     # -s <subj> add a subject line
     # -b <body> add the body
-    # -f <file> attach file 
+    # -f <file> attach file
     # -r <addr> set from
     opts, args = getopt.getopt(sys.argv[1:], 'r:t:s:b:f:')
 
@@ -323,7 +327,7 @@ if __name__ == "__main__" :
     files = [ ]
     subj = "pymailer message"
     body = "EOF"
-    res = False                                  # default result is False 
+    res = False                                  # default result is False
                                                  # because we haven't sent
                                                  # anything yet
 
@@ -344,7 +348,7 @@ if __name__ == "__main__" :
         res = with_text(to, subj, body, files)
     else:
         res = simple(to, subj, body)
-        
+
     if res:
         print 'successfully sent message!'
     else:
