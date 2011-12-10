@@ -7,29 +7,33 @@
 # basic runtime monitoring for broker.
 
 """
-monitor originally designed for use in an automated broker. alerts dev team
-on exceptions.
+monitor originally designed for use in an automated broker. alerts dev
+team on exceptions.
 
 there are three modes supported:
     * production
     * staging
     * development
 
-all three may be set, but it is intended to have only one set. you set the mode
-using toggle_<mode> (i.e. toggle_staging()) and get the state of that mode with
-<mode>_p (i.e. staging_p()).
+all three may be set, but it is intended to have only one set. you set 
+the mode using set_<mode> or toggle_<mode> (i.e. toggle_staging()) and 
+get the state of that mode with <mode>_p (i.e. staging_p()).
 
-this should be imported into the code's main() function, where the appropriate
-mode is set and the function's run() function is called. for example:
+this should be imported into the code's main() function, where the 
+appropriate mode is set and the function's run() function is called. for
+example:
 
 def main(args):
     if not monitor.production_p(): monitor.toggle_production()
 
     monitor.initialise(
         devs=['dev@example.org', 'dev2@example.net', 'coder@monkey.com'],
-        sender='MCP Monitor <noreply@example.net>'
+        sender='MCP monitor <noreply@example.net>'
     )
     monitor.monitor(run, args)
+
+Note that by default, no mode is set. This is to force the developer to 
+think about what the proper mode for operation is.
 """
 
 import mailer as mail
@@ -120,7 +124,7 @@ def set_development():
 class Traceback:
     """
     Internal traceback class, currently only a very basic file target for
-    traceback.print_foo()
+    the traceback.print_foo() method
     """
     buf = None
 
@@ -148,12 +152,16 @@ class Traceback:
 
 def monitor(target, **kwargs):
     """
-    Primary Monitor function to ensure proper error handling.
+    Primary monitor function to ensure proper error handling.
     """
 
     if not GLOBALS['devs'] or not GLOBALS['sender']:
         raise Exception("need to initialise devs and sender!")
 
+    if (not GLOBALS['production'] and not GLOBALS['staging'] and
+       not GLOBALS['development']):
+       raise Exception("no mode selected.")
+    
     mail.set_sender(GLOBALS['sender'])
 
     while True:
@@ -163,7 +171,7 @@ def monitor(target, **kwargs):
                 target(**kwargs)
             else:
                 target()
-        except KeyboardInterrupt:           # die on ^C - for attach processes
+        except KeyboardInterrupt:       # die on ^C - for attached processes
             return
         except Exception as error:
             stack = _dump_traceback(error)[0]
@@ -197,9 +205,9 @@ def test(delay=1):
 
 def testmon(delay=1):
     """
-    A quick function to test the Monitor function. Call it like this:
+    A quick function to test the monitor function. Call it like this:
 
-    monitor.Monitor(testmon, { 'delay': 5 })
+    monitor.monitor(testmon, { 'delay': 5 })
 
     You can also test the module with monitor.test(delay = 5)
 
@@ -217,8 +225,8 @@ def testmon(delay=1):
 
 def __testf(exception_type):
     """
-    test function to mess with Monitor functionality. throws a weird error on
-    purpose.
+    test function to mess with monitor functionality. throws a weird 
+    error on purpose.
     """
     time.sleep(1)
 
@@ -252,8 +260,8 @@ def _handle_staging(stack, error):
     """
     Handle staging-mode: execute production-mode then development-mode.
     """
-    _handle_production(stack)           # first do what we'd do in production
-    _handle_development(stack, error)   # then do what we'd do in development
+    _handle_production(stack)           # first, production behaviour
+    _handle_development(stack, error)   # then, development behaviour
 
 
 def _handle_production(stack):
