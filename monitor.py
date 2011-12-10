@@ -25,9 +25,11 @@ mode is set and the function's run() function is called. for example:
 def main(args):
     if not monitor.production_p(): monitor.toggle_production()
 
-    monitor.Monitor(run())
-
-
+    monitor.initialise(
+        devs=['dev@example.org', 'dev2@example.net', 'coder@monkey.com'],
+        sender='MCP Monitor <noreply@example.net>'
+    )
+    monitor.monitor(run, args)
 """
 
 import mailer as mail
@@ -86,6 +88,33 @@ def development_p():
     Indicate whether we are in development-mode.
     """
     return GLOBALS['development']
+
+
+def set_production():
+    """
+    Set monitor to production mode.
+    """
+    GLOBALS['production'] = True
+    GLOBALS['staging'] = False
+    GLOBALS['development'] = False
+
+
+def set_staging():
+    """
+    Set monitor to staging mode.
+    """
+    GLOBALS['production'] = False
+    GLOBALS['staging'] = True
+    GLOBALS['development'] = False
+
+
+def set_development():
+    """
+    Set monitor to development mode.
+    """
+    GLOBALS['production'] = False
+    GLOBALS['staging'] = False
+    GLOBALS['development'] = True
 
 
 class Traceback:
@@ -237,6 +266,8 @@ def _handle_production(stack):
         datetime.datetime.utcnow(),
         stack
     )
+    if GLOBALS['production']:
+        body += '\n execution has restarted.'
     body += '\n (automated email sent by the python monitor module ('
     body += 'https://github.com/kisom/pymods)'
 
