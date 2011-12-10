@@ -15,11 +15,11 @@ there are three modes supported:
     * staging
     * development
 
-all three may be set, but it is intended to have only one set. you set 
-the mode using set_<mode> or toggle_<mode> (i.e. toggle_staging()) and 
+all three may be set, but it is intended to have only one set. you set
+the mode using set_<mode> or toggle_<mode> (i.e. toggle_staging()) and
 get the state of that mode with <mode>_p (i.e. staging_p()).
 
-this should be imported into the code's main() function, where the 
+this should be imported into the code's main() function, where the
 appropriate mode is set and the function's run() function is called. for
 example:
 
@@ -32,7 +32,7 @@ def main(args):
     )
     monitor.monitor(run, args)
 
-Note that by default, no mode is set. This is to force the developer to 
+Note that by default, no mode is set. This is to force the developer to
 think about what the proper mode for operation is.
 """
 
@@ -160,8 +160,8 @@ def monitor(target, **kwargs):
 
     if (not GLOBALS['production'] and not GLOBALS['staging'] and
        not GLOBALS['development']):
-       raise Exception("no mode selected.")
-    
+        raise Exception("no mode selected.")
+
     mail.set_sender(GLOBALS['sender'])
 
     while True:
@@ -225,7 +225,7 @@ def testmon(delay=1):
 
 def __testf(exception_type):
     """
-    test function to mess with monitor functionality. throws a weird 
+    test function to mess with monitor functionality. throws a weird
     error on purpose.
     """
     time.sleep(1)
