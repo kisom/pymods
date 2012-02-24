@@ -19,10 +19,20 @@ class JsonApi (RestApi):
         self.__trace__('setting content type application/json')
         self.content_t = 'application/json'
 
+    def __decode__(self, data):
+        try:
+            res = json.loads(data)
+        except ValueError as e:
+            self.__trace__('invalid JSON')
+            self.__trace__('data: "%s"' % data)
+            return None
+        else:
+            return res
+
     def get(self, request, *args):
-        res = RestApi.post(self, request, args)
+        res = RestApi.get(self, request, args)
         if res:
-            res = json.loads(res)
+            res = self.__decode__(res['data'])
 
         return res
 
@@ -33,7 +43,7 @@ class JsonApi (RestApi):
         res  = RestApi.post(self, request, data, args)
 
         if res:
-            res  = json.loads(res)
+            res  = json.loads(res['data'])
 
         return res
 
