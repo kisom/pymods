@@ -154,7 +154,6 @@ def monitor(target, **kwargs):
     """
     Primary monitor function to ensure proper error handling.
     """
-
     if not GLOBALS['devs'] or not GLOBALS['sender']:
         raise Exception("need to initialise devs and sender!")
 
