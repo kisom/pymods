@@ -1,3 +1,0 @@
-[submodule "nlp"]
-	path = nlp
-	url = https://kisom@github.com/kisom/python_basicnlp.git
